@@ -1,74 +1,90 @@
 <div align="center">
 
 # ROOMs
-### Build spaces people want to be in.
+### Self-hosted chat platform (PHP + JSON storage)
 
-![Status](https://img.shields.io/badge/status-active-0a7ea4?style=for-the-badge)
-![Maintained](https://img.shields.io/badge/maintained-2026-2ea44f?style=for-the-badge)
-![Platform](https://img.shields.io/badge/platform-GitHub-181717?style=for-the-badge&logo=github)
+![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=for-the-badge&logo=php&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-enabled-0f766e?style=for-the-badge)
+![Storage](https://img.shields.io/badge/Storage-JSON%20Files-0a7ea4?style=for-the-badge)
+![License](https://img.shields.io/badge/License-Private-181717?style=for-the-badge)
 
 </div>
 
-<p align="center">
-A clean foundation for the ROOMs project.
-</p>
+ROOMs is a secure, self-hosted chat application with group rooms, direct messaging,
+file sharing, admin tools, and installable PWA support.
 
----
-
-## Overview
-
-ROOMs is currently bootstrapped and ready for implementation. This README provides
-a structured starting point for product, engineering, and contributors.
-
-## Planned Features
-
-- Room discovery and filtering
-- Real-time availability status
-- Booking and schedule management
-- User profiles and preferences
-- Admin dashboard and analytics
-
-## Tech Direction
-
-- Frontend: `TBD`
-- Backend: `TBD`
-- Database: `TBD`
-- Auth: `TBD`
-
-## Quick Start
-
-```bash
-# 1) Clone
-git clone https://github.com/30200dotIR/ROOMs.git
-cd ROOMs
-
-# 2) Add project code
-# 3) Document setup instructions here
-```
-
-## Project Structure
+## Repository Layout
 
 ```text
 ROOMs/
   README.md
-  (coming soon)
+  rooms/
+    index.html
+    app.php
+    chat.php
+    install.php
+    api/
+    admin/
+    data/
+    uploads/
 ```
 
-## Roadmap
+## Core Features
 
-- [x] Repository initialized
-- [x] README added
-- [ ] Core app scaffolding
-- [ ] CI/CD pipeline
-- [ ] First production release
+- User registration and login with bcrypt-hashed passwords
+- Public, private, and secret rooms with invite-code flow
+- Direct messages with contact management
+- File and media sharing in chats
+- Admin dashboard for users, rooms, settings, and logs
+- Rate limiting and session-based auth controls
+- PWA support (`manifest.json` + `sw.js`)
+
+## Requirements
+
+- PHP `7.4+`
+- Apache with `mod_rewrite` (or equivalent nginx config)
+- Writable app directories:
+  - `rooms/data/`
+  - `rooms/uploads/`
+  - `rooms/cache/`
+  - `rooms/chats/`
+  - `rooms/status/`
+
+## Quick Setup
+
+```bash
+git clone https://github.com/30200dotIR/ROOMs.git
+cd ROOMs/rooms
+```
+
+1. Upload or serve the `rooms/` directory from your web root.
+2. Open `install.php` once to create required folders and seed files.
+3. Log in to admin at `/admin/login.php` (default password: `admin123`).
+4. Change the admin password immediately in `Admin -> Settings`.
+5. Delete `install.php` after installation.
+
+## API Modules
+
+- `rooms/api/auth.php` - registration, login, profile, password updates
+- `rooms/api/messages.php` - send/fetch/delete/react/typing operations
+- `rooms/api/rooms.php` - room creation, listing, join/leave, updates
+- `rooms/api/contacts.php` - contact search, add/remove, block/unblock, P2P
+- `rooms/api/admin.php` - admin-only actions and system controls
+
+## Security Notes
+
+- Passwords use bcrypt (`cost=12`)
+- Session cookies are `HttpOnly` + `SameSite=Lax`
+- Rate limiting is enabled for key actions
+- Upload handling includes extension validation
+- `.htaccess` applies hardening and access protections
 
 ## Contributing
 
-1. Fork the repository.
-2. Create a feature branch (`feat/your-change`).
-3. Commit with clear messages.
-4. Open a pull request.
+1. Create a branch from `main`.
+2. Make your changes in focused commits.
+3. Open a pull request with a clear summary.
 
 ## License
 
-Add a license file (`LICENSE`) and update this section.
+No license file is currently defined. Add `LICENSE` if you want reuse terms.
