@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>ROOMs — Secure Messaging</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#075E54"/>
+<meta name="description" content="ROOMs — End-to-End Encrypted Messaging"/>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon32x32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="favicon16x16.png"/>
+<link rel="apple-touch-icon" href="appletouchicon.png"/>
+<link rel="manifest" href="manifest.json"/>
+<style>
+:root{
+  --green:#25D366;--teal:#128C7E;--dark-green:#075E54;
+  --bg:#0B141A;--bg2:#111B21;--bg3:#1F2C34;
+  --text:#E9EDEF;--text2:#8696A0;--text3:#667781;
+  --bubble-out:#005C4B;--bubble-in:#202C33;
+  --border:rgba(134,150,160,.15);--err:#E74C3C;--warn:#F39C12;
+  --radius:12px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
+body{display:flex;align-items:center;justify-content:center}
+
+/* ===== Animated Background ===== */
+.bg-pattern{position:fixed;inset:0;z-index:0;overflow:hidden}
+.bg-pattern::before{
+  content:'';position:absolute;inset:-50%;
+  background:radial-gradient(ellipse at 20% 50%,rgba(18,140,126,.15) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 20%,rgba(37,211,102,.1) 0%,transparent 50%),
+             radial-gradient(ellipse at 60% 80%,rgba(7,94,84,.2) 0%,transparent 60%);
+  animation:bgPulse 15s ease-in-out infinite alternate;
+}
+@keyframes bgPulse{
+  0%{transform:scale(1) rotate(0)}
+  100%{transform:scale(1.1) rotate(3deg)}
+}
+.particles{position:absolute;inset:0}
+.particle{
+  position:absolute;width:4px;height:4px;background:var(--green);border-radius:50%;
+  opacity:0;animation:particleFloat linear infinite;
+}
+@keyframes particleFloat{
+  0%{transform:translateY(100vh) scale(0);opacity:0}
+  10%{opacity:.6}
+  90%{opacity:.6}
+  100%{transform:translateY(-10vh) scale(1);opacity:0}
+}
+
+/* ===== Main Container ===== */
+.landing{
+  position:relative;z-index:1;width:100%;max-width:960px;
+  display:flex;align-items:center;gap:60px;padding:24px;min-height:100vh;
+}
+.hero{flex:1;display:none}
+.auth-side{flex:1;display:flex;justify-content:center;width:100%}
+
+@media(min-width:768px){
+  .hero{display:flex;flex-direction:column;gap:20px}
+  .auth-side{flex:0 0 420px}
+}
+
+/* ===== Hero ===== */
+.hero .logo-wrap{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.hero .logo-icon{width:56px;height:56px;border-radius:16px;object-fit:cover}
+.hero .logo-text{font-size:36px;font-weight:700;background:linear-gradient(135deg,var(--green),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .tagline{font-size:18px;color:var(--text2);line-height:1.6;margin-bottom:16px}
+.hero .features{display:flex;flex-direction:column;gap:12px}
+.hero .feat{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--text2)}
+.hero .feat svg{flex-shrink:0;color:var(--green)}
+.hero .social-proof{margin-top:24px;padding:16px;background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.15);border-radius:var(--radius);font-size:14px;color:var(--text2)}
+.hero .social-proof strong{color:var(--green)}
+
+/* ===== Auth Card ===== */
+.auth-card{
+  width:100%;max-width:400px;background:var(--bg2);
+  border:1px solid var(--border);border-radius:20px;
+  padding:32px 28px;backdrop-filter:blur(20px);
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
+.auth-card .mobile-logo{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:20px}
+.auth-card .mobile-logo img{width:60px;height:60px;border-radius:14px}
+.auth-card .mobile-logo h1{font-size:22px;font-weight:700;background:linear-gradient(135deg,var(--green),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+@media(min-width:768px){.auth-card .mobile-logo{display:none}}
+
+.auth-tabs{display:flex;margin-bottom:24px;border-bottom:2px solid var(--border);gap:0}
+.auth-tab{
+  flex:1;padding:12px;text-align:center;font-size:15px;font-weight:600;
+  color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;
+  margin-bottom:-2px;transition:all .3s;background:none;border-top:0;border-left:0;border-right:0;
+}
+.auth-tab.active{color:var(--green);border-bottom-color:var(--green)}
+
+/* ===== Form Styles ===== */
+.form-group{margin-bottom:16px;position:relative}
+.form-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.form-group input{
+  width:100%;padding:12px 14px;background:var(--bg3);border:1.5px solid var(--border);
+  border-radius:10px;font-size:15px;color:var(--text);outline:none;
+  transition:border .3s,box-shadow .3s;
+}
+.form-group input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(37,211,102,.15)}
+.form-group input.error{border-color:var(--err);animation:shake .4s}
+.form-group .input-hint{font-size:11px;color:var(--text3);margin-top:4px}
+.form-group .input-error{font-size:11px;color:var(--err);margin-top:4px;display:none}
+.form-group.has-error .input-error{display:block}
+.form-group.has-error .input-hint{display:none}
+
+.pw-toggle{
+  position:absolute;right:12px;top:32px;background:none;border:none;
+  color:var(--text3);cursor:pointer;padding:4px;font-size:18px;
+}
+
+/* Password strength */
+.pw-strength{height:4px;background:var(--bg);border-radius:2px;margin-top:6px;overflow:hidden}
+.pw-strength-bar{height:100%;border-radius:2px;transition:width .3s,background .3s;width:0}
+
+/* Username check */
+.username-status{position:absolute;right:12px;top:32px;font-size:14px}
+.username-status.ok{color:var(--green)}
+.username-status.taken{color:var(--err)}
+
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+.btn-primary{
+  width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:600;
+  background:linear-gradient(135deg,var(--teal),var(--green));color:#fff;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden;
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,211,102,.3)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-primary .spinner{display:none;width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto}
+.btn-primary.loading span{display:none}
+.btn-primary.loading .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.auth-switch{text-align:center;margin-top:16px;font-size:14px;color:var(--text3)}
+.auth-switch a{color:var(--green);text-decoration:none;font-weight:500;cursor:pointer}
+.auth-switch a:hover{text-decoration:underline}
+
+.auth-footer{text-align:center;margin-top:20px;font-size:12px;color:var(--text3);display:flex;align-items:center;justify-content:center;gap:6px}
+.auth-footer svg{color:var(--green)}
+
+/* ===== Toast ===== */
+.toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);
+  padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;
+  z-index:9999;opacity:0;transition:all .4s cubic-bezier(0.175,0.885,0.32,1.275);
+  backdrop-filter:blur(12px);max-width:90%;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{background:rgba(231,76,60,.95);color:#fff}
+.toast.success{background:rgba(37,211,102,.95);color:#fff}
+
+/* ===== Loading Overlay ===== */
+.loading-overlay{
+  position:fixed;inset:0;z-index:9998;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  transition:opacity .5s;
+}
+.loading-overlay.hidden{opacity:0;pointer-events:none}
+.loading-logo{width:64px;height:64px;border-radius:16px;animation:loadPulse 1.5s ease-in-out infinite}
+@keyframes loadPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:.7}}
+.loading-text{font-size:14px;color:var(--text3)}
+
+@media(max-width:767px){
+  .landing{padding:16px;justify-content:center}
+  .auth-card{padding:24px 20px;border-radius:16px}
+}
+</style>
+</head>
+<body>
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <img src="icon.png" class="loading-logo" alt=""/>
+  <div class="loading-text">Connecting securely…</div>
+</div>
+
+<!-- Background -->
+<div class="bg-pattern"><div class="particles" id="particles"></div></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Landing -->
+<div class="landing">
+  <!-- Hero (Desktop) -->
+  <div class="hero">
+    <div class="logo-wrap">
+      <img src="icon.png" class="logo-icon" alt="ROOMs"/>
+      <div class="logo-text">ROOMs</div>
+    </div>
+    <p class="tagline">Privacy-first messaging.<br>Your conversations, your rules.</p>
+    <div class="features">
+      <div class="feat">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        End-to-End Encrypted
+      </div>
+      <div class="feat">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Zero Data Collection
+      </div>
+      <div class="feat">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 014 10 15 15 0 01-4 10 15 15 0 01-4-10A15 15 0 0112 2z"/></svg>
+        Self-Hosted &amp; Open
+      </div>
+      <div class="feat">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        Mobile-First PWA
+      </div>
+    </div>
+    <div class="social-proof">
+      <strong>🔒 Secure by design</strong> — Messages are encrypted before they leave your device. Not even the server can read them.
+    </div>
+  </div>
+
+  <!-- Auth Card -->
+  <div class="auth-side">
+    <div class="auth-card">
+      <div class="mobile-logo">
+        <img src="icon.png" alt="ROOMs"/>
+        <h1>ROOMs</h1>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Sign In</button>
+        <button class="auth-tab" data-tab="register">Sign Up</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form id="loginForm" autocomplete="off">
+        <div class="form-group">
+          <label for="loginUsername">Username</label>
+          <input id="loginUsername" type="text" placeholder="Enter username" required maxlength="20" autocomplete="username"/>
+        </div>
+        <div class="form-group" style="position:relative">
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" type="password" placeholder="Enter password" required autocomplete="current-password"/>
+          <button type="button" class="pw-toggle" onclick="togglePw('loginPassword',this)">👁</button>
+        </div>
+        <button type="submit" class="btn-primary" id="loginBtn"><span>Sign In</span><div class="spinner"></div></button>
+        <div class="auth-switch">Don't have an account? <a onclick="switchTab('register')">Sign Up</a></div>
+      </form>
+
+      <!-- REGISTER FORM -->
+      <form id="registerForm" autocomplete="off" style="display:none">
+        <div class="form-group">
+          <label for="regName">Full Name</label>
+          <input id="regName" type="text" placeholder="e.g. John Doe" required maxlength="50" minlength="2"/>
+          <div class="input-hint">2-50 characters</div>
+        </div>
+        <div class="form-group" style="position:relative">
+          <label for="regUsername">Username</label>
+          <input id="regUsername" type="text" placeholder="e.g. john_doe" required maxlength="20" minlength="3" autocomplete="off"/>
+          <span class="username-status" id="usernameStatus"></span>
+          <div class="input-hint">3-20 chars, letters/numbers/underscore</div>
+          <div class="input-error" id="usernameError"></div>
+        </div>
+        <div class="form-group" style="position:relative">
+          <label for="regPassword">Password</label>
+          <input id="regPassword" type="password" placeholder="Min 8 characters" required minlength="8" autocomplete="new-password"/>
+          <button type="button" class="pw-toggle" onclick="togglePw('regPassword',this)">👁</button>
+          <div class="pw-strength"><div class="pw-strength-bar" id="pwBar"></div></div>
+          <div class="input-hint" id="pwHint">Use 8+ characters with mix of letters, numbers, symbols</div>
+        </div>
+        <div class="form-group">
+          <label for="regConfirm">Confirm Password</label>
+          <input id="regConfirm" type="password" placeholder="Repeat password" required autocomplete="new-password"/>
+        </div>
+        <button type="submit" class="btn-primary" id="regBtn"><span>Create Account</span><div class="spinner"></div></button>
+        <div class="auth-switch">Already have an account? <a onclick="switchTab('login')">Sign In</a></div>
+      </form>
+
+      <div class="auth-footer">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        End-to-End Encrypted
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== Particles ===== */
+(function(){
+  const c=document.getElementById('particles');
+  for(let i=0;i<20;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    p.style.left=Math.random()*100+'%';
+    p.style.animationDuration=(8+Math.random()*12)+'s';
+    p.style.animationDelay=Math.random()*10+'s';
+    p.style.width=p.style.height=(2+Math.random()*4)+'px';
+    p.style.opacity=.3+Math.random()*.3;
+    c.appendChild(p);
+  }
+})();
+
+/* ===== Toast ===== */
+let toastTimer;
+function showToast(msg,type='error'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+type;
+  requestAnimationFrame(()=>{t.classList.add('show')});
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ===== Tab Switch ===== */
+function switchTab(tab){
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  document.getElementById('loginForm').style.display=tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display=tab==='register'?'block':'none';
+}
+document.querySelectorAll('.auth-tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+
+/* ===== Password Toggle ===== */
+function togglePw(id,btn){
+  const inp=document.getElementById(id);
+  const isPw=inp.type==='password';
+  inp.type=isPw?'text':'password';
+  btn.textContent=isPw?'🙈':'👁';
+}
+
+/* ===== Password Strength ===== */
+document.getElementById('regPassword').addEventListener('input',function(){
+  const p=this.value;let score=0;
+  if(p.length>=8)score+=20;if(p.length>=12)score+=20;if(p.length>=16)score+=20;
+  if(/[a-z]/.test(p))score+=10;if(/[A-Z]/.test(p))score+=10;
+  if(/[0-9]/.test(p))score+=10;if(/[^a-zA-Z0-9]/.test(p))score+=10;
+  const bar=document.getElementById('pwBar');
+  bar.style.width=score+'%';
+  bar.style.background=score<=40?'#E74C3C':score<=60?'#F39C12':score<=80?'#25D366':'#3A76F0';
+  const hint=document.getElementById('pwHint');
+  const labels=['Weak','Medium','Strong','Very Strong'];
+  hint.textContent=score<=40?labels[0]:score<=60?labels[1]:score<=80?labels[2]:labels[3];
+});
+
+/* ===== Username Check ===== */
+let usernameTimer;
+document.getElementById('regUsername').addEventListener('input',function(){
+  const u=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'');
+  this.value=u;
+  const status=document.getElementById('usernameStatus');
+  const errEl=document.getElementById('usernameError');
+  const fg=this.closest('.form-group');
+
+  clearTimeout(usernameTimer);
+  if(u.length<3){status.textContent='';fg.classList.remove('has-error');return;}
+
+  status.textContent='⏳';status.className='username-status';
+  usernameTimer=setTimeout(async()=>{
+    try{
+      const res=await fetch('api/auth.php?action=checkUsername&username='+encodeURIComponent(u));
+      const data=await res.json();
+      if(data.available){
+        status.textContent='✓';status.className='username-status ok';
+        fg.classList.remove('has-error');
+      }else{
+        status.textContent='✗';status.className='username-status taken';
+        fg.classList.add('has-error');
+        errEl.textContent=data.reason||'Username already taken';
+      }
+    }catch(e){status.textContent='?';}
+  },500);
+});
+
+/* ===== Login ===== */
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const btn=document.getElementById('loginBtn');
+  btn.classList.add('loading');btn.disabled=true;
+
+  try{
+    const fd=new FormData();
+    fd.append('action','login');
+    fd.append('username',document.getElementById('loginUsername').value.trim());
+    fd.append('password',document.getElementById('loginPassword').value);
+
+    const res=await fetch('api/auth.php',{method:'POST',body:fd});
+    const data=await res.json();
+
+    if(data.error){showToast(data.error);btn.classList.remove('loading');btn.disabled=false;return;}
+
+    showToast('Welcome back!','success');
+    setTimeout(()=>location.href='app.php',500);
+  }catch(e){
+    showToast('Connection failed');btn.classList.remove('loading');btn.disabled=false;
+  }
+});
+
+/* ===== Register ===== */
+document.getElementById('registerForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const pw=document.getElementById('regPassword').value;
+  const confirm=document.getElementById('regConfirm').value;
+  if(pw!==confirm){showToast('Passwords don\'t match');return;}
+
+  const btn=document.getElementById('regBtn');
+  btn.classList.add('loading');btn.disabled=true;
+
+  try{
+    const fd=new FormData();
+    fd.append('action','register');
+    fd.append('displayName',document.getElementById('regName').value.trim());
+    fd.append('username',document.getElementById('regUsername').value.trim());
+    fd.append('password',pw);
+
+    const res=await fetch('api/auth.php',{method:'POST',body:fd});
+    const data=await res.json();
+
+    if(data.error){showToast(data.error);btn.classList.remove('loading');btn.disabled=false;return;}
+
+    showToast('Account created!','success');
+    setTimeout(()=>location.href='app.php',500);
+  }catch(e){
+    showToast('Connection failed');btn.classList.remove('loading');btn.disabled=false;
+  }
+});
+
+/* ===== Check Session ===== */
+(async()=>{
+  try{
+    const res=await fetch('api/auth.php?action=check');
+    const data=await res.json();
+    if(data.authenticated){location.href='app.php';return;}
+  }catch(e){}
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+})();
+</script>
+</body>
+</html>
